@@ -1,5 +1,6 @@
 import React from 'react';
 import ReactDOM from 'react-dom';
+import ReactCSSTransitionGroup from 'react-addons-css-transition-group';
 import $ from 'jquery'
 require('../scss/style.scss');
 
@@ -11,6 +12,8 @@ class Soundclouder extends React.Component{
 		SC.initialize({
 			client_id: process.env.SOUNDCLOUD_ID
 		});
+
+		this.audioContext = new AudioContext()
 	}
 
 	search(keyword){
@@ -24,11 +27,13 @@ class Soundclouder extends React.Component{
 	}
 
 	render(){
-		return <div>
+		return (
+			<div>
 				<h1>Soundclouder</h1>
 				<SearchForm searchWord={this.search.bind(this)}/>
-				<SearchResultsList data={this.state.data}/>
+				<SearchResultsList ctx={this.audioContext} data={this.state.data}/>
 			</div>
+		)
 	}
 }
 
@@ -41,26 +46,31 @@ class SearchForm extends React.Component{
 	}
 
 	render(){
-		return <div>
-			<form onSubmit={this.onFormSubmit.bind(this)}>
-				<input type="text" ref="search" />
-				<button>Search</button>
-			</form>
-		</div>
+		return (
+			<div>
+				<form onSubmit={this.onFormSubmit.bind(this)}>
+					<input type="text" ref="search" />
+					<button>Search</button>
+				</form>
+			</div>
+		)
 	}	
 }
 
 class SearchResultsList extends React.Component{
 	render(){
-		return <ul>
-		{this.props.data.map((result)=> {
-			return <SearchResult 
-				artwork={result.artwork_url ? result.artwork_url : result.user.avatar_url} 
-				title={result.title} 
-				stream={result.stream_url}
-				key={result.id}/>
-		})}
-		</ul>
+		return (
+			<ul>
+			{this.props.data.map((result)=> {
+				return <SearchResult 
+					ctx={this.props.ctx}
+					artwork={result.artwork_url ? result.artwork_url : result.user.avatar_url} 
+					title={result.title} 
+					stream={result.stream_url}
+					key={result.id}/>
+			})}
+			</ul>
+		)
 	}
 }
 
@@ -75,7 +85,7 @@ class SearchResult extends React.Component{
 	}
 
 	getAudio() {
-		this.audioContext = new AudioContext()
+		this.audioContext = this.props.ctx;
 	  var request = new XMLHttpRequest()
 	  request.open('GET', `${this.refs.stream.dataset.streamUrl}?client_id=${process.env.SOUNDCLOUD_ID}`)
 	  request.responseType = 'arraybuffer'
@@ -88,11 +98,13 @@ class SearchResult extends React.Component{
 	}
 
 	render(){
-		return <li ref="stream" data-stream-url={this.props.stream}>
-			<img src={this.props.artwork}/>
-			<h5>{this.props.title}</h5>
-			<button onClick={this.getAudio.bind(this)}>play</button>
-		</li>
+		return (
+			<li ref="stream" data-stream-url={this.props.stream}>
+				<img src={this.props.artwork}/>
+				<h5>{this.props.title}</h5>
+				<button onClick={this.getAudio.bind(this)}>play</button>
+			</li>
+		)
 	}
 }
 
