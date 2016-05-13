@@ -65,19 +65,23 @@ class SearchResultsList extends React.Component{
 }
 
 class SearchResult extends React.Component{
-	play() {
-		var audioContext = new AudioContext()
+	play(buffer){
 		// wait 100ms for sample to download/decode
-		var startTime = audioContext.currentTime + 0.2
+		this.startTime = this.audioContext.currentTime + 0.2
+		var player = this.audioContext.createBufferSource()
+		player.buffer = buffer
+		player.connect(this.audioContext.destination)
+		player.start(this.startTime)
+	}
+
+	getAudio() {
+		this.audioContext = new AudioContext()
 	  var request = new XMLHttpRequest()
 	  request.open('GET', `${this.refs.stream.dataset.streamUrl}?client_id=${process.env.SOUNDCLOUD_ID}`)
 	  request.responseType = 'arraybuffer'
-	  request.onload = function() {
-	    audioContext.decodeAudioData(request.response, (buffer) => {
-	    	var player = audioContext.createBufferSource()
-				player.buffer = buffer
-				player.connect(audioContext.destination)
-				player.start(startTime)
+	  request.onload = () => {
+	    this.audioContext.decodeAudioData(request.response, (audio) => {
+	    	this.play(audio)
 	    })
 	  }
 	  request.send()
@@ -87,7 +91,7 @@ class SearchResult extends React.Component{
 		return <li ref="stream" data-stream-url={this.props.stream}>
 			<img src={this.props.artwork}/>
 			<h5>{this.props.title}</h5>
-			<button onClick={this.play.bind(this)}>play</button>
+			<button onClick={this.getAudio.bind(this)}>play</button>
 		</li>
 	}
 }
