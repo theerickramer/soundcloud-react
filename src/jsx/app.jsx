@@ -33,7 +33,6 @@ class Soundclouder extends React.Component{
 }
 
 class SearchForm extends React.Component{
-
 	onFormSubmit(e){
 		e.preventDefault()
 		this.props.searchWord(this.refs.search.value)
@@ -51,19 +50,45 @@ class SearchForm extends React.Component{
 	}	
 }
 
-class SearchResult extends React.Component{
-	render(){
-		return <li><img src={this.props.artwork}/><h5>{this.props.title}</h5></li>
-	}
-}
-
 class SearchResultsList extends React.Component{
 	render(){
 		return <ul>
 		{this.props.data.map((result)=> {
-			return <SearchResult artwork={result.artwork_url ? result.artwork_url : result.user.avatar_url} title={result.title} key={result.id}/>
+			return <SearchResult 
+				artwork={result.artwork_url ? result.artwork_url : result.user.avatar_url} 
+				title={result.title} 
+				stream={result.stream_url}
+				key={result.id}/>
 		})}
 		</ul>
+	}
+}
+
+class SearchResult extends React.Component{
+	play() {
+		var audioContext = new AudioContext()
+		// wait 100ms for sample to download/decode
+		var startTime = audioContext.currentTime + 0.2
+	  var request = new XMLHttpRequest()
+	  request.open('GET', `${this.refs.stream.dataset.streamUrl}?client_id=${process.env.SOUNDCLOUD_ID}`)
+	  request.responseType = 'arraybuffer'
+	  request.onload = function() {
+	    audioContext.decodeAudioData(request.response, (buffer) => {
+	    	var player = audioContext.createBufferSource()
+				player.buffer = buffer
+				player.connect(audioContext.destination)
+				player.start(startTime)
+	    })
+	  }
+	  request.send()
+	}
+
+	render(){
+		return <li ref="stream" data-stream-url={this.props.stream}>
+			<img src={this.props.artwork}/>
+			<h5>{this.props.title}</h5>
+			<button onClick={this.play.bind(this)}>play</button>
+		</li>
 	}
 }
 
