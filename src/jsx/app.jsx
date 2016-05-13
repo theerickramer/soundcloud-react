@@ -1,7 +1,7 @@
 import React from 'react';
 import ReactDOM from 'react-dom';
 import $ from 'jquery'
-// require('../scss/style.scss');
+require('../scss/style.scss');
 
 class Soundclouder extends React.Component{
 	constructor(props){
@@ -24,7 +24,11 @@ class Soundclouder extends React.Component{
 	}
 
 	render(){
-		return <SearchForm searchWord={this.search.bind(this)}/>
+		return <div>
+				<h1>Soundclouder</h1>
+				<SearchForm searchWord={this.search.bind(this)}/>
+				<SearchResultsList data={this.state.data}/>
+			</div>
 	}
 }
 
@@ -45,6 +49,22 @@ class SearchForm extends React.Component{
 			</form>
 		</div>
 	}	
+}
+
+class SearchResult extends React.Component{
+	render(){
+		return <li><img src={this.props.artwork}/><h5>{this.props.title}</h5></li>
+	}
+}
+
+class SearchResultsList extends React.Component{
+	render(){
+		return <ul>
+		{this.props.data.map((result)=> {
+			return <SearchResult artwork={result.artwork_url ? result.artwork_url : result.user.avatar_url} title={result.title} key={result.id}/>
+		})}
+		</ul>
+	}
 }
 
 ReactDOM.render(<Soundclouder/>, document.getElementById('content'))
