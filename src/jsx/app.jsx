@@ -75,38 +75,56 @@ class SearchResultsList extends React.Component{
 }
 
 class SearchResult extends React.Component{
-	play(buffer){
-		// wait 100ms for sample to download/decode
-		this.startTime = this.audioContext.currentTime + 0.2;
+	constructor(props){
+		super(props);
+		this.audioContext = this.props.ctx;
+	}
+
+	play(){
 		this.player = this.audioContext.createBufferSource();
-		this.player.buffer = buffer;
-		this.player.connect(this.audioContext.destination)
-		this.player.start(this.startTime)
+		this.player.connect(this.audioContext.destination);
+		if (!this._loaded) {
+			this.getAudio();
+		} else {
+			this.player.buffer = this.buffer;
+			this.startTime = this.audioContext.currentTime;
+		}
+		this.player.start(0, this.startOffset)
 	}
 
 	getAudio(){
-		this.audioContext = this.props.ctx;
 	  var request = new XMLHttpRequest()
 	  request.open('GET', `${this.refs.stream.dataset.streamUrl}?client_id=${process.env.SOUNDCLOUD_ID}`)
 	  request.responseType = 'arraybuffer'
 	  request.onload = () => {
 	    this.audioContext.decodeAudioData(request.response, (audio) => {
-	    	this.play(audio)
+				this.startTime = 0;
+				this.startOffset = 0;
+	    	this.buffer = audio;
+				this.player.buffer = this.buffer;
+	    	this._loaded = true;
 	    })
 	  }
 	  request.send()
 	}
 
 	stop(){
-		this.player.stop()
+		this.player.stop();
 	}
+
+	pause(){
+		this.player.stop();
+		this.startOffset += this.audioContext.currentTime - this.startTime;
+	}
+
 
 	render(){
 		return (
 			<li ref="stream" data-stream-url={this.props.stream}>
 				<img src={this.props.artwork}/>
 				<h5>{this.props.title}</h5>
-				<button onClick={this.getAudio.bind(this)}>play</button>
+				<button onClick={this.play.bind(this)}>play</button>
+				<button onClick={this.pause.bind(this)}>pause</button>
 				<button onClick={this.stop.bind(this)}>stop</button>
 			</li>
 		)
