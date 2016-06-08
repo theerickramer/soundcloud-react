@@ -110,6 +110,7 @@ class SearchResult extends React.Component{
 
 	stop(){
 		this.player.stop();
+		this.startOffset = 0;
 	}
 
 	pause(){
