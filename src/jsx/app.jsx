@@ -1,8 +1,8 @@
 import React from 'react';
 import ReactDOM from 'react-dom';
 import ReactCSSTransitionGroup from 'react-addons-css-transition-group';
-import $ from 'jquery'
-require('../scss/style.scss');
+// import $ from 'jquery'
+// require('../scss/style.scss');
 
 class Soundclouder extends React.Component{
 	constructor(props){
@@ -82,7 +82,10 @@ class SearchResult extends React.Component{
 
 	play(){
 		this.player = this.audioContext.createBufferSource();
-		this.player.connect(this.audioContext.destination);
+		this.volume = this.audioContext.createGain();
+		this.player.connect(this.volume);
+		this.volume.connect(this.audioContext.destination);
+
 		if (!this._loaded) {
 			this.getAudio();
 		} else {
@@ -118,6 +121,9 @@ class SearchResult extends React.Component{
 		this.startOffset += this.audioContext.currentTime - this.startTime;
 	}
 
+	volumeChange(){
+		this.volume.gain.value = this.refs.volume.value / 100;
+	}
 
 	render(){
 		return (
@@ -127,6 +133,8 @@ class SearchResult extends React.Component{
 				<button onClick={this.play.bind(this)}>play</button>
 				<button onClick={this.pause.bind(this)}>pause</button>
 				<button onClick={this.stop.bind(this)}>stop</button>
+				<label for="volume">volume</label>
+				<input type="range" id="volume" ref="volume" onChange={this.volumeChange.bind(this)} />
 			</li>
 		)
 	}
